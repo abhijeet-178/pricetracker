@@ -10,7 +10,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
 import { Loader2 } from "lucide-react";
 import { getPriceHistory } from "@/app/action";
 
@@ -20,15 +19,29 @@ export default function PriceChart({ productId }) {
 
   useEffect(() => {
     async function loadData() {
-      const history = await getPriceHistory(productId);
+      try {
+        console.log("Product ID:", productId);
 
-      const chartData = history.map((item) => ({
-        date: new Date(item.checked_at).toLocaleDateString(),
-        price: parseFloat(item.price),
-      }));
+        const history = await getPriceHistory(productId);
 
-      setData(chartData);
-      setLoading(false);
+        console.log("Price History:", history);
+
+        const chartData = history.map((item) => ({
+          date: new Date(
+            item.checked_at || item.created_at
+          ).toLocaleDateString(),
+          price: Number(item.price),
+        }));
+
+        console.log("Chart Data:", chartData);
+
+        setData(chartData);
+      } catch (err) {
+        console.error("Chart Error:", err);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadData();
@@ -36,7 +49,7 @@ export default function PriceChart({ productId }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8 text-gray-500 w-full">
+      <div className="flex items-center justify-center py-8 w-full">
         <Loader2 className="w-5 h-5 animate-spin mr-2" />
         Loading chart...
       </div>
@@ -45,36 +58,32 @@ export default function PriceChart({ productId }) {
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 w-full">
-        No price history yet. Check back after the first daily update!
+      <div className="w-full rounded-md border p-6 text-center text-gray-500">
+        No price history available for this product.
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      <h4 className="text-sm font-semibold mb-4 text-gray-700">
-        Price History
-      </h4>
-      <ResponsiveContainer width="100%" height={200}>
+    <div className="w-full mt-4">
+      <h4 className="font-semibold mb-3">Price History</h4>
+
+      <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-          <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-            }}
-          />
+          <CartesianGrid strokeDasharray="3 3" />
+
+          <XAxis dataKey="date" />
+
+          <YAxis />
+
+          <Tooltip />
+
           <Line
             type="monotone"
             dataKey="price"
-            stroke="#FA5D19"
-            strokeWidth={2}
-            dot={{ fill: "#FA5D19", r: 4 }}
-            activeDot={{ r: 6 }}
+            stroke="#f97316"
+            strokeWidth={3}
+            dot
           />
         </LineChart>
       </ResponsiveContainer>
